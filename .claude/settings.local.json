@@ -10,7 +10,9 @@
       "WebFetch(domain:docs.krea.ai)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(gh auth:*)",
+      "Bash(brew install:*)"
     ]
   }
 }

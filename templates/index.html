@@ -506,26 +506,15 @@ body {
 ══════════════════════════════════════ */
 @media (max-width: 768px) {
 
-  /* Prevent any horizontal overflow on the page */
   html, body { overflow-x: hidden; max-width: 100vw; }
-
-  /* Reserve space at the bottom for the sticky generate button */
-  body { padding-bottom: 80px; }
+  body { padding-bottom: 0; } /* no fixed button */
 
   /* ── Header ── */
-  .site-header {
-    padding: 14px 16px 12px;
-  }
-  .site-header h1 {
-    font-size: 1.75rem;   /* ~28px */
-    line-height: 1.2;
-  }
-  .site-header p {
-    font-size: .9rem;
-    margin-top: 4px;
-  }
+  .site-header { padding: 14px 16px 12px; }
+  .site-header h1 { font-size: 1.75rem; line-height: 1.2; }
+  .site-header p  { font-size: .9rem; margin-top: 4px; }
 
-  /* ── Layout: full-width stacked column ── */
+  /* ── Layout ── */
   .layout {
     flex-direction: column;
     padding: 12px 16px;
@@ -533,130 +522,108 @@ body {
     align-items: stretch;
   }
 
-  /* Sidebar stacks on top (order 1), main below (order 2) */
-  .sidebar {
-    width: 100%;
-    position: static;
-    order: 1;
-    gap: 10px;
-  }
-  .main { order: 2; }
+  /*
+   * Use display:contents to "dissolve" the sidebar and main containers.
+   * Their children become direct flex children of .layout, so we can
+   * control the exact stacking order with the `order` property.
+   */
+  .sidebar { display: contents; }
+  .main    { display: contents; }
+
+  /* ── Stacking order ── */
+  .upload-section       { order: 1; } /* photo upload    */
+  .main > :nth-child(1) { order: 2; } /* category tabs   */
+  .main > :nth-child(2) { order: 3; } /* costume grid    */
+  .btn-generate         { order: 4; } /* generate button */
+  .status-text          { order: 5; } /* status message  */
+  .preview-panel        { order: 6; } /* preview (last!) */
+  .action-buttons       { order: 7; } /* הורד / נסה שוב / הבא */
+  .counter-text         { order: 8; } /* image counter   */
 
   /* ── Photo upload ── */
   .upload-section h3 { font-size: 1rem; margin-bottom: 12px; }
-
-  .photo-slots {
-    justify-content: center;
-    gap: 12px;
-  }
-  .photo-slot {
-    /* Big tap targets — min 80px each */
-    flex: 1;
-    max-width: 110px;
-    min-width: 80px;
-  }
-  .slot-inner {
-    min-height: 80px;
-    border-width: 2.5px;
-  }
-  .slot-inner .slot-icon { font-size: 1.8rem; }
+  .photo-slots { justify-content: center; gap: 12px; }
+  .photo-slot  { flex: 1; max-width: 110px; min-width: 80px; }
+  .slot-inner  { min-height: 80px; border-width: 2.5px; }
+  .slot-inner .slot-icon  { font-size: 1.8rem; }
   .slot-inner .slot-label { font-size: .7rem; }
 
-  /* Status + counter sit side-by-side below upload on mobile */
-  .status-text {
-    font-size: .88rem;
-    min-height: 44px;
-    padding: 10px 14px;
+  /* ── Generate button: prominent, in normal flow ── */
+  .btn-generate {
+    position: static;           /* override any fixed/absolute */
+    width: 100%;
+    min-height: 60px;
+    font-size: 1.15rem;
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: 0 5px 22px rgba(147,112,192,.42);
   }
+
+  /* ── Status & counter ── */
+  .status-text  { font-size: .88rem; min-height: 44px; padding: 10px 14px; }
   .counter-text { font-size: .82rem; }
 
-  /* ── Generate button: sticky fixed bar at bottom ── */
-  .btn-generate {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 300;
-    border-radius: 0;
-    min-height: 62px;
-    font-size: 1.15rem;
-    padding: 16px;
-    box-shadow: 0 -4px 24px rgba(147,112,192,.35);
-    /* Respect iOS safe area (notch/home bar) */
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
-  }
-
   /* ── Category tabs ── */
-  .category-tabs {
-    gap: 8px;
-    padding: 4px 0 8px;
-    /* Allow only horizontal tab scroll, not page scroll */
-    touch-action: pan-x;
-  }
+  .category-tabs { gap: 8px; padding: 4px 0 8px; touch-action: pan-x; }
   .tab-btn {
-    font-size: .93rem;   /* ≥14px */
+    font-size: .93rem;
     padding: 10px 16px;
-    min-height: 44px;    /* tap target */
+    min-height: 44px;
     border-radius: 22px;
   }
 
-  /* ── Costume grid: exactly 3 per row ── */
-  .costume-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 9px;
-  }
+  /* ── Costume grid: 3 per row ── */
+  .costume-grid { grid-template-columns: repeat(3, 1fr); gap: 9px; }
   .costume-card {
     padding: 12px 6px 10px;
-    min-height: 80px;    /* tap target */
+    min-height: 80px;
     gap: 6px;
-    /* More visible selected state for touch */
     -webkit-tap-highlight-color: transparent;
   }
   .costume-card.selected {
     box-shadow: 0 0 0 3px var(--accent), 0 4px 16px rgba(155,126,200,.3);
     transform: scale(1.04);
   }
-  .costume-card .card-emoji { font-size: 2.25rem; } /* 36px */
-  .costume-card .card-name  { font-size: .8rem; min-height: 0; }
+  .costume-card .card-emoji { font-size: 2.25rem; }
+  .costume-card .card-name  { font-size: .8rem; }
 
-  /* ── Preview area ── */
+  /* ── Preview area: snug, no forced height, full image ── */
   .preview-panel {
-    min-height: 260px;
-    padding: 16px 12px;
-    gap: 12px;
+    min-height: unset;
+    padding: 12px;
+    gap: 10px;
   }
+  .preview-placeholder { gap: 10px; }
   .preview-placeholder img {
     width: 100%;
     max-width: 100%;
+    height: auto;
+    object-fit: contain;  /* show the full image, never crop */
     border-radius: 12px;
   }
   .preview-result img {
     width: 100%;
     max-width: 100%;
+    height: auto;
+    object-fit: contain;
     border-radius: 12px;
   }
-  .preview-placeholder .tagline {
-    font-size: clamp(1.35rem, 6vw, 1.8rem);
-  }
+  .preview-placeholder .tagline { font-size: clamp(1.35rem, 6vw, 1.8rem); }
   .preview-loading { padding: 32px 20px; }
 
-  /* ── Action buttons: full-width row ── */
-  .action-buttons {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 8px;
-  }
+  /* ── Action buttons: full-width equal row ── */
+  .action-buttons { flex-direction: row; flex-wrap: nowrap; gap: 8px; }
   .btn {
     flex: 1;
     justify-content: center;
     font-size: .88rem;
     padding: 0 10px;
-    min-height: 50px;   /* tap target */
+    min-height: 50px;
     border-radius: 14px;
   }
 }
 
-/* ── Small phones: 375px (iPhone SE) ── */
+/* ── Small phones ≤ 390px (iPhone SE / 14 mini) ── */
 @media (max-width: 390px) {
   .layout { padding: 10px 12px; gap: 10px; }
   .site-header h1 { font-size: 1.5rem; }
