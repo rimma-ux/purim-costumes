@@ -983,23 +983,40 @@ function clearPolling() {
 downloadBtn.addEventListener('click', async () => {
   if (!state.generatedImageUrl) return;
   downloadBtn.disabled = true;
-  try {
-    const proxyUrl = '/api/download-image?url=' + encodeURIComponent(state.generatedImageUrl);
-    const resp = await fetch(proxyUrl);
-    if (!resp.ok) throw new Error('Download failed');
-    const blob = await resp.blob();
-    const file = new File([blob], 'purim-costume.jpg', { type: 'image/jpeg' });
 
-    const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
-    if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
-      // Mobile: Web Share API lets user save to photos or share to WhatsApp etc.
-      await navigator.share({ files: [file], title: 'תחפושת פורים' });
-    } else if (isMobile) {
-      // Mobile without share support: open in new tab so user can long-press to save
-      window.open(state.generatedImageUrl, '_blank');
+  // Build absolute URL (state.generatedImageUrl is /api/result/<id>)
+  const imageUrl = state.generatedImageUrl.startsWith('http')
+    ? state.generatedImageUrl
+    : window.location.origin + state.generatedImageUrl;
+
+  const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+  console.log('Download clicked. isMobile:', isMobile, 'imageUrl:', imageUrl);
+
+  try {
+    if (isMobile) {
+      // Fetch the image directly using the absolute URL
+      console.log('Fetching image blob...');
+      const resp = await fetch(imageUrl);
+      if (!resp.ok) throw new Error('Fetch failed: ' + resp.status);
+      const blob = await resp.blob();
+      const file = new File([blob], 'purim-costume.jpg', { type: 'image/jpeg' });
+      console.log('File ready. size:', file.size, 'type:', file.type);
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        console.log('Calling navigator.share...');
+        await navigator.share({ files: [file], title: 'תחפושת פורים' });
+      } else {
+        // Web Share not available – open in new tab so user can long-press to save
+        console.log('Web Share not supported, opening new tab');
+        window.open(imageUrl, '_blank');
+      }
     } else {
-      // Desktop: standard blob download
-      const blobUrl = URL.createObjectURL(file);
+      // Desktop: fetch via download proxy to trigger Save dialog
+      const proxyUrl = '/api/download-image?url=' + encodeURIComponent(state.generatedImageUrl);
+      const resp = await fetch(proxyUrl);
+      if (!resp.ok) throw new Error('Download failed: ' + resp.status);
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
       a.download = 'purim-costume.jpg';
@@ -1009,9 +1026,11 @@ downloadBtn.addEventListener('click', async () => {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     }
   } catch (err) {
-    if (err.name !== 'AbortError') {
-      // AbortError = user cancelled share sheet – not a real error
-      window.open(state.generatedImageUrl, '_blank');
+    if (err.name === 'AbortError') {
+      console.log('User cancelled share sheet');
+    } else {
+      console.error('Download error:', err);
+      window.open(imageUrl, '_blank');
     }
   } finally {
     downloadBtn.disabled = false;
