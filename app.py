@@ -1,18 +1,47 @@
 import os
+import sys
+import traceback
+
+print(f"[startup] Python {sys.version}", flush=True)
+print(f"[startup] PORT env = {os.environ.get('PORT', 'NOT SET')}", flush=True)
+
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, Response
 from dotenv import load_dotenv
-import krea_api
-from costume_parser import parse_costumes
+
+print("[startup] Flask imported OK", flush=True)
+
+try:
+    import krea_api
+    print("[startup] krea_api imported OK", flush=True)
+except Exception as e:
+    print(f"[startup] ERROR importing krea_api: {e}", flush=True)
+    traceback.print_exc()
+    raise
+
+try:
+    from costume_parser import parse_costumes
+    print("[startup] costume_parser imported OK", flush=True)
+except Exception as e:
+    print(f"[startup] ERROR importing costume_parser: {e}", flush=True)
+    traceback.print_exc()
+    raise
 
 load_dotenv()
 
 os.makedirs('uploads', exist_ok=True)
+print("[startup] uploads dir ready", flush=True)
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
 
 # Parse costumes once at startup
-CATEGORIES = parse_costumes()
+try:
+    CATEGORIES = parse_costumes()
+    print(f"[startup] parsed {len(CATEGORIES)} costume categories OK", flush=True)
+except Exception as e:
+    print(f"[startup] ERROR parsing costumes: {e}", flush=True)
+    traceback.print_exc()
+    raise
 
 # Build a flat lookup: costume_id → costume dict (for prompt retrieval)
 COSTUME_MAP = {
@@ -20,6 +49,8 @@ COSTUME_MAP = {
     for category in CATEGORIES
     for costume in category['costumes']
 }
+
+print("[startup] app ready", flush=True)
 
 
 @app.route('/')
