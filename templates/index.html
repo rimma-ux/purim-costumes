@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>האיראנים לא יהרסו לנו</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet" />
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent:       #9B7EC8;
+  --accent-deep:  #7A5CAE;
+  --accent-light: #C4A8E8;
+  --gold:         #F5C842;
+  --pink:         #ECA8CD;
+  --mint:         #7DD3B0;
+  --cream:        #FBF8F0;
+  --warm-white:   #FFFEF9;
+  --text:         #3D2F5C;
+  --text2:        #8570A8;
+  --text3:        #B8A8D0;
+  --radius:       18px;
+  --radius-sm:    12px;
+  --shadow-soft:  0 4px 24px rgba(100,60,160,.08), 0 1px 4px rgba(100,60,160,.05);
+  --shadow-card:  0 2px 12px rgba(100,60,160,.07);
+  --shadow-hover: 0 10px 36px rgba(100,60,160,.16);
+}
+
+body {
+  font-family: 'Varela Round', sans-serif;
+  background: linear-gradient(160deg, #FFF5EC 0%, #F5ECFF 55%, #EBF0FF 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  direction: rtl;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.site-header {
+  background: linear-gradient(135deg, rgba(255,245,236,.95) 0%, rgba(240,228,255,.95) 60%, rgba(255,235,248,.95) 100%);
+  border-bottom: 1px solid rgba(155,126,200,.18);
+  padding: 22px 24px 18px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
+.site-header h1 {
+  font-family: 'Varela Round', sans-serif;
+  font-size: clamp(2rem, 5.5vw, 3rem);
+  color: var(--accent-deep);
+  letter-spacing: .02em;
+  text-shadow: 0 2px 12px rgba(122,92,174,.2), 0 1px 3px rgba(122,92,174,.12);
+  line-height: 1.1;
+}
+.site-header p {
+  font-size: clamp(.9rem, 2vw, 1.05rem);
+  color: var(--text2);
+  margin-top: 6px;
+  opacity: .9;
+}
+
+/* ── Layout ── */
+.layout {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1300px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+/* sidebar – first child = right in RTL */
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 24px;
+}
+
+/* main content */
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Panels ── */
+.panel {
+  background: var(--warm-white);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(155,126,200,.1);
+}
+
+/* ── Photo Upload ── */
+.upload-section h3 {
+  font-size: .95rem;
+  color: var(--accent-deep);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: .01em;
+}
+.photo-slots {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+.photo-slot {
+  flex: 1;
+  aspect-ratio: 1;
+  max-width: 86px;
+  position: relative;
+  cursor: pointer;
+}
+.photo-slot input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.slot-inner {
+  width: 100%;
+  height: 100%;
+  border: 2px dashed #D8C8EE;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(145deg, #FAF5FF, #FFF8F2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: border-color .22s ease, background .22s ease, transform .18s ease;
+  overflow: hidden;
+  min-height: 82px;
+}
+.slot-inner:hover {
+  border-color: var(--accent);
+  background: linear-gradient(145deg, #F2E8FF, #FFF2F8);
+  transform: translateY(-2px);
+}
+.slot-inner .slot-icon { font-size: 1.55rem; }
+.slot-inner .slot-label {
+  font-size: .62rem;
+  color: var(--text3);
+  letter-spacing: .02em;
+}
+.slot-inner img.thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.slot-inner.has-photo {
+  border-style: solid;
+  border-color: var(--accent-light);
+}
+.slot-remove {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 22px;
+  height: 22px;
+  background: #E05A6A;
+  color: #fff;
+  border-radius: 50%;
+  border: 2px solid var(--warm-white);
+  font-size: .7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  display: none;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(224,90,106,.35);
+  transition: transform .15s;
+}
+.slot-remove:hover { transform: scale(1.15); }
+.photo-slot.has-photo .slot-remove { display: flex; }
+
+/* ── Generate Button ── */
+.btn-generate {
+  width: 100%;
+  padding: 15px 12px;
+  background: linear-gradient(135deg, #B08FD8 0%, #9370C0 60%, #7A5CAE 100%);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Varela Round', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .22s ease, opacity .2s;
+  box-shadow: 0 5px 22px rgba(147,112,192,.38), 0 1px 6px rgba(147,112,192,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  letter-spacing: .02em;
+}
+.btn-generate:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(147,112,192,.52), 0 2px 8px rgba(147,112,192,.25);
+}
+.btn-generate:active:not(:disabled) { transform: translateY(0); }
+.btn-generate:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Status & Counter ── */
+.status-text {
+  text-align: center;
+  font-size: .86rem;
+  color: var(--text2);
+  background: linear-gradient(135deg, #F5EEFF, #FFF4F0);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(155,126,200,.14);
+  padding: 11px 14px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.4;
+}
+.counter-text {
+  text-align: center;
+  font-size: .78rem;
+  color: var(--accent-light);
+  letter-spacing: .03em;
+}
+
+/* ── Spinner ── */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Category Tabs ── */
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #D8C8EE transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.category-tabs::-webkit-scrollbar { height: 3px; }
+.category-tabs::-webkit-scrollbar-track { background: transparent; }
+.category-tabs::-webkit-scrollbar-thumb { background: #D8C8EE; border-radius: 4px; }
+
+.tab-btn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 24px;
+  border: 1.5px solid rgba(155,126,200,.22);
+  background: var(--warm-white);
+  color: var(--text2);
+  font-family: 'Varela Round', sans-serif;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: all .2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: .01em;
+}
+.tab-btn:hover {
+  border-color: var(--accent-light);
+  color: var(--accent-deep);
+  background: linear-gradient(135deg, #F8F0FF, #FFF8F4);
+  transform: translateY(-1px);
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, #EDE0FF, #F8E6F8);
+  border-color: var(--accent);
+  color: var(--accent-deep);
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(155,126,200,.28);
+}
+
+/* ── Costume Grid ── */
+.costume-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 10px;
+}
+
+.costume-card {
+  background: var(--warm-white);
+  border: 1.5px solid rgba(155,126,200,.18);
+  border-radius: var(--radius);
+  padding: 14px 8px 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  box-shadow: var(--shadow-card);
+}
+.costume-card:hover {
+  border-color: var(--accent-light);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-3px) scale(1.03);
+  background: linear-gradient(145deg, #FAF4FF, #FFF9F4);
+}
+.costume-card.selected {
+  border-color: var(--accent);
+  background: linear-gradient(145deg, #F0E8FF, #EAE0F8);
+  box-shadow: 0 0 0 3px rgba(155,126,200,.28), var(--shadow-hover);
+  transform: translateY(-3px) scale(1.03);
+}
+.costume-card .card-emoji { font-size: 2.1rem; line-height: 1; }
+.costume-card .card-name {
+  font-size: .78rem;
+  color: var(--text);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* ── Preview Area ── */
+.preview-panel {
+  background: var(--cream);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(155,126,200,.1);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  min-height: 440px;
+  position: relative;
+}
+
+.preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.preview-placeholder img {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 14px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 6px 24px rgba(100,60,160,.1));
+}
+.preview-placeholder .tagline {
+  font-family: 'Varela Round', sans-serif;
+  font-size: clamp(1.7rem, 4.5vw, 2.4rem);
+  color: var(--accent-deep);
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(122,92,174,.15);
+  letter-spacing: .01em;
+}
+
+.preview-result {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+.preview-result img {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 16px;
+  box-shadow: 0 10px 48px rgba(100,60,160,.18);
+  object-fit: contain;
+  transition: opacity .4s ease;
+}
+
+/* Loading */
+.preview-loading {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 48px 40px;
+}
+.preview-loading .big-spinner {
+  width: 64px;
+  height: 64px;
+  border: 5px solid #E8D8F8;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.preview-loading p {
+  font-size: 1.05rem;
+  color: var(--accent-deep);
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
+/* ── Action Buttons ── */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn {
+  padding: 12px 22px;
+  border-radius: 14px;
+  border: none;
+  font-family: 'Varela Round', sans-serif;
+  font-size: .92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .2s ease;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  letter-spacing: .01em;
+}
+.btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-download {
+  background: linear-gradient(135deg, #8FD5B0, #5EB892);
+  color: #1A4A35;
+  box-shadow: 0 4px 16px rgba(94,184,146,.28);
+}
+.btn-download:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(94,184,146,.42);
+}
+
+.btn-retry {
+  background: linear-gradient(135deg, #F8D97A, #E8BC48);
+  color: #5A3800;
+  box-shadow: 0 4px 16px rgba(232,188,72,.28);
+}
+.btn-retry:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(232,188,72,.42);
+}
+
+.btn-next {
+  background: linear-gradient(135deg, #F5C8E2, #E8A4CC);
+  color: #62184A;
+  box-shadow: 0 4px 16px rgba(232,164,204,.28);
+}
+.btn-next:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(232,164,204,.42);
+}
+
+/* ── Error banner ── */
+.error-banner {
+  display: none;
+  background: #FEF0F0;
+  border: 1.5px solid #F8CACA;
+  border-radius: var(--radius-sm);
+  padding: 11px 16px;
+  color: #C42B2B;
+  font-size: .84rem;
+  width: 100%;
+  text-align: center;
+}
+
+/* ── Tablet (768px – 1024px) ── */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .layout { gap: 18px; padding: 18px; }
+  .sidebar { width: 270px; }
+  .costume-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 9px; }
+}
+
+/* ══════════════════════════════════════
+   MOBILE  ≤ 768px
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Prevent any horizontal overflow on the page */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* Reserve space at the bottom for the sticky generate button */
+  body { padding-bottom: 80px; }
+
+  /* ── Header ── */
+  .site-header {
+    padding: 14px 16px 12px;
+  }
+  .site-header h1 {
+    font-size: 1.75rem;   /* ~28px */
+    line-height: 1.2;
+  }
+  .site-header p {
+    font-size: .9rem;
+    margin-top: 4px;
+  }
+
+  /* ── Layout: full-width stacked column ── */
+  .layout {
+    flex-direction: column;
+    padding: 12px 16px;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  /* Sidebar stacks on top (order 1), main below (order 2) */
+  .sidebar {
+    width: 100%;
+    position: static;
+    order: 1;
+    gap: 10px;
+  }
+  .main { order: 2; }
+
+  /* ── Photo upload ── */
+  .upload-section h3 { font-size: 1rem; margin-bottom: 12px; }
+
+  .photo-slots {
+    justify-content: center;
+    gap: 12px;
+  }
+  .photo-slot {
+    /* Big tap targets — min 80px each */
+    flex: 1;
+    max-width: 110px;
+    min-width: 80px;
+  }
+  .slot-inner {
+    min-height: 80px;
+    border-width: 2.5px;
+  }
+  .slot-inner .slot-icon { font-size: 1.8rem; }
+  .slot-inner .slot-label { font-size: .7rem; }
+
+  /* Status + counter sit side-by-side below upload on mobile */
+  .status-text {
+    font-size: .88rem;
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+  .counter-text { font-size: .82rem; }
+
+  /* ── Generate button: sticky fixed bar at bottom ── */
+  .btn-generate {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 300;
+    border-radius: 0;
+    min-height: 62px;
+    font-size: 1.15rem;
+    padding: 16px;
+    box-shadow: 0 -4px 24px rgba(147,112,192,.35);
+    /* Respect iOS safe area (notch/home bar) */
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  /* ── Category tabs ── */
+  .category-tabs {
+    gap: 8px;
+    padding: 4px 0 8px;
+    /* Allow only horizontal tab scroll, not page scroll */
+    touch-action: pan-x;
+  }
+  .tab-btn {
+    font-size: .93rem;   /* ≥14px */
+    padding: 10px 16px;
+    min-height: 44px;    /* tap target */
+    border-radius: 22px;
+  }
+
+  /* ── Costume grid: exactly 3 per row ── */
+  .costume-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+  }
+  .costume-card {
+    padding: 12px 6px 10px;
+    min-height: 80px;    /* tap target */
+    gap: 6px;
+    /* More visible selected state for touch */
+    -webkit-tap-highlight-color: transparent;
+  }
+  .costume-card.selected {
+    box-shadow: 0 0 0 3px var(--accent), 0 4px 16px rgba(155,126,200,.3);
+    transform: scale(1.04);
+  }
+  .costume-card .card-emoji { font-size: 2.25rem; } /* 36px */
+  .costume-card .card-name  { font-size: .8rem; min-height: 0; }
+
+  /* ── Preview area ── */
+  .preview-panel {
+    min-height: 260px;
+    padding: 16px 12px;
+    gap: 12px;
+  }
+  .preview-placeholder img {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+  .preview-result img {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+  .preview-placeholder .tagline {
+    font-size: clamp(1.35rem, 6vw, 1.8rem);
+  }
+  .preview-loading { padding: 32px 20px; }
+
+  /* ── Action buttons: full-width row ── */
+  .action-buttons {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .btn {
+    flex: 1;
+    justify-content: center;
+    font-size: .88rem;
+    padding: 0 10px;
+    min-height: 50px;   /* tap target */
+    border-radius: 14px;
+  }
+}
+
+/* ── Small phones: 375px (iPhone SE) ── */
+@media (max-width: 390px) {
+  .layout { padding: 10px 12px; gap: 10px; }
+  .site-header h1 { font-size: 1.5rem; }
+  .costume-grid { gap: 7px; }
+  .costume-card .card-emoji { font-size: 2rem; }
+  .costume-card .card-name  { font-size: .72rem; }
+  .tab-btn { font-size: .85rem; padding: 9px 13px; }
+  .photo-slot { max-width: 95px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>האיראנים לא יהרסו לנו</h1>
+  <p>צרו תמונות מדהימות של עצמכם בתחפושת פורים</p>
+</header>
+
+<div class="layout">
+
+  <!-- ══ SIDEBAR (right) ══ -->
+  <aside class="sidebar">
+
+    <!-- Photo upload -->
+    <div class="panel upload-section">
+      <h3>📷 העלו תמונות פנים</h3>
+      <div class="photo-slots" id="photoSlots">
+        <!-- slots rendered by JS -->
+      </div>
+      <p style="font-size:.72rem;color:var(--text3);margin-top:12px;text-align:center;line-height:1.5;">
+        העלו עד 3 תמונות לתוצאה טובה יותר
+      </p>
+    </div>
+
+    <!-- Generate -->
+    <button class="btn-generate" id="generateBtn" disabled>
+      <span id="generateBtnContent">🎭 !צור תמונה</span>
+    </button>
+
+    <!-- Status -->
+    <div class="status-text" id="statusText">✨ בחר תחפושת והעלה תמונות</div>
+
+    <!-- Counter -->
+    <div class="counter-text" id="counterText"></div>
+
+  </aside>
+
+  <!-- ══ MAIN (left) ══ -->
+  <main class="main">
+
+    <!-- Category tabs -->
+    <div class="panel" style="padding:14px 18px;">
+      <div class="category-tabs" id="categoryTabs">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Costume grid -->
+    <div class="panel" style="padding:14px;">
+      <div class="costume-grid" id="costumeGrid">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-panel panel" id="previewPanel">
+
+      <!-- Placeholder -->
+      <div class="preview-placeholder" id="previewPlaceholder">
+        <img src="/preview-image" alt="Preview" id="previewImg" />
+        <div class="tagline" dir="rtl">מה תהיו השנה?</div>
+      </div>
+
+      <!-- Loading -->
+      <div class="preview-loading" id="previewLoading">
+        <div class="big-spinner"></div>
+        <p>⏳ יוצר תמונה, אנא המתינו...</p>
+      </div>
+
+      <!-- Result -->
+      <div class="preview-result" id="previewResult">
+        <img id="resultImg" src="" alt="Generated costume" />
+      </div>
+
+      <!-- Error -->
+      <div class="error-banner" id="errorBanner"></div>
+
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-buttons" id="actionButtons">
+      <button class="btn btn-download" id="downloadBtn" disabled>💾 !הורד</button>
+      <button class="btn btn-retry" id="retryBtn" disabled>🔄 נסה שוב</button>
+      <button class="btn btn-next" id="nextBtn">▶ הבא</button>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const CATEGORIES = {{ categories | tojson }};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const state = {
+  photos: [null, null, null],   // each: {dataUrl, uploadedUrl} or null
+  selectedCostume: null,        // costume object
+  activeCategoryId: CATEGORIES[0]?.id || null,
+  generationId: null,
+  generatedImageUrl: null,
+  isGenerating: false,
+  pollingTimer: null,
+  imageCount: parseInt(localStorage.getItem('purimImageCount') || '0'),
+};
+
+// ═══════════════════════════════════════════
+// ELEMENTS
+// ═══════════════════════════════════════════
+const generateBtn    = document.getElementById('generateBtn');
+const generateBtnCnt = document.getElementById('generateBtnContent');
+const statusText     = document.getElementById('statusText');
+const counterText    = document.getElementById('counterText');
+const categoryTabs   = document.getElementById('categoryTabs');
+const costumeGrid    = document.getElementById('costumeGrid');
+const previewPlaceholder = document.getElementById('previewPlaceholder');
+const previewLoading     = document.getElementById('previewLoading');
+const previewResult      = document.getElementById('previewResult');
+const resultImg          = document.getElementById('resultImg');
+const errorBanner        = document.getElementById('errorBanner');
+const downloadBtn        = document.getElementById('downloadBtn');
+const retryBtn           = document.getElementById('retryBtn');
+const nextBtn            = document.getElementById('nextBtn');
+
+// ═══════════════════════════════════════════
+// PHOTO SLOTS
+// ═══════════════════════════════════════════
+function renderPhotoSlots() {
+  const container = document.getElementById('photoSlots');
+  container.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const photo = state.photos[i];
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot' + (photo ? ' has-photo' : '');
+    slot.dataset.index = i;
+
+    if (photo) {
+      slot.innerHTML = `
+        <div class="slot-inner has-photo">
+          <img class="thumb" src="${photo.dataUrl}" alt="תמונה ${i+1}" />
+        </div>
+        <button class="slot-remove" title="הסר תמונה">✕</button>
+      `;
+      slot.querySelector('.slot-remove').addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.photos[i] = null;
+        renderPhotoSlots();
+        updateUI();
+      });
+      // Re-upload on click
+      const inner = slot.querySelector('.slot-inner');
+      inner.style.cursor = 'pointer';
+      inner.addEventListener('click', () => triggerFileInput(i));
+    } else {
+      const labels = ['תמונה 1', 'תמונה 2', 'תמונה 3'];
+      slot.innerHTML = `
+        <div class="slot-inner">
+          <span class="slot-icon">📷</span>
+          <span class="slot-label">${labels[i]}</span>
+        </div>
+        <input type="file" accept="image/*" />
+      `;
+      slot.querySelector('input[type="file"]').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handlePhotoSelect(i, file);
+      });
+    }
+    container.appendChild(slot);
+  }
+}
+
+function triggerFileInput(index) {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) handlePhotoSelect(index, file);
+  };
+  inp.click();
+}
+
+async function handlePhotoSelect(index, file) {
+  // Show thumbnail immediately via FileReader
+  const dataUrl = await readFileAsDataURL(file);
+  state.photos[index] = { dataUrl, uploadedUrl: null };
+  renderPhotoSlots();
+  setStatus('⏳ מעלה תמונה...');
+  updateUI();
+
+  try {
+    const formData = new FormData();
+    formData.append('photo', file);
+    const resp = await fetch('/api/upload-photo', { method: 'POST', body: formData });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || 'Upload failed');
+    state.photos[index].uploadedUrl = data.url;
+    setStatus(getStatusMessage());
+    updateUI();
+  } catch (err) {
+    console.error('Upload error:', err);
+    state.photos[index] = null;
+    renderPhotoSlots();
+    setStatus('❌ שגיאה בהעלאה - נסה שוב');
+    updateUI();
+  }
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+// ═══════════════════════════════════════════
+// CATEGORY TABS
+// ═══════════════════════════════════════════
+function renderTabs() {
+  categoryTabs.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (cat.id === state.activeCategoryId ? ' active' : '');
+    btn.textContent = `${cat.emoji} ${cat.name}`;
+    btn.addEventListener('click', () => {
+      state.activeCategoryId = cat.id;
+      renderTabs();
+      renderCostumes();
+    });
+    categoryTabs.appendChild(btn);
+  });
+}
+
+// ═══════════════════════════════════════════
+// COSTUME GRID
+// ═══════════════════════════════════════════
+function renderCostumes() {
+  costumeGrid.innerHTML = '';
+  const cat = CATEGORIES.find(c => c.id === state.activeCategoryId);
+  if (!cat) return;
+
+  cat.costumes.forEach(costume => {
+    const card = document.createElement('div');
+    const isSelected = state.selectedCostume?.id === costume.id;
+    card.className = 'costume-card' + (isSelected ? ' selected' : '');
+    card.innerHTML = `
+      <div class="card-emoji">${costume.emoji}</div>
+      <div class="card-name">${costume.hebrew_name}</div>
+    `;
+    card.addEventListener('click', () => {
+      state.selectedCostume = costume;
+      renderCostumes();
+      setStatus(getStatusMessage());
+      updateUI();
+    });
+    costumeGrid.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════
+// GENERATE
+// ═══════════════════════════════════════════
+generateBtn.addEventListener('click', startGeneration);
+
+async function startGeneration() {
+  const photoUrl = getFirstUploadedPhotoUrl();
+  if (!photoUrl || !state.selectedCostume) return;
+
+  clearPolling();
+  state.isGenerating = true;
+  state.generatedImageUrl = null;
+  state.generationId = null;
+
+  showPreviewState('loading');
+  setStatus('🎨 יוצר תמונה...');
+  setGenerating(true);
+  hideError();
+
+  try {
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: state.selectedCostume.prompt,
+        image_url: photoUrl,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || 'Generation failed');
+
+    state.generationId = data.generation_id;
+    pollGeneration();
+  } catch (err) {
+    console.error('Generate error:', err);
+    showError('❌ שגיאה ביצירה: ' + err.message);
+    showPreviewState('placeholder');
+    setStatus('❌ שגיאה - נסה שוב');
+    setGenerating(false);
+  }
+}
+
+function pollGeneration() {
+  if (!state.generationId) return;
+  state.pollingTimer = setTimeout(async () => {
+    try {
+      const resp = await fetch(`/api/generation/${state.generationId}`);
+      const data = await resp.json();
+      if (!resp.ok || data.error) throw new Error(data.error || 'Poll failed');
+
+      if (data.status === 'completed' && data.url) {
+        state.generatedImageUrl = data.url;
+        state.isGenerating = false;
+        resultImg.src = data.url;
+        showPreviewState('result');
+        setStatus('✅ הושלם!');
+        setGenerating(false);
+        incrementCounter();
+        downloadBtn.disabled = false;
+        retryBtn.disabled = false;
+      } else if (data.status === 'failed' || data.status === 'error') {
+        throw new Error('Generation failed on server');
+      } else {
+        // Still processing
+        pollGeneration();
+      }
+    } catch (err) {
+      console.error('Poll error:', err);
+      showError('❌ שגיאה בטעינה: ' + err.message);
+      showPreviewState('placeholder');
+      setStatus('❌ שגיאה - נסה שוב');
+      setGenerating(false);
+    }
+  }, 2000);
+}
+
+function clearPolling() {
+  if (state.pollingTimer) {
+    clearTimeout(state.pollingTimer);
+    state.pollingTimer = null;
+  }
+}
+
+// ═══════════════════════════════════════════
+// DOWNLOAD
+// ═══════════════════════════════════════════
+downloadBtn.addEventListener('click', async () => {
+  if (!state.generatedImageUrl) return;
+  try {
+    // Use backend proxy to avoid CORS download issues
+    const proxyUrl = '/api/download-image?url=' + encodeURIComponent(state.generatedImageUrl);
+    const a = document.createElement('a');
+    a.href = proxyUrl;
+    a.download = 'purim-costume.jpg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    // Fallback: open in new tab
+    window.open(state.generatedImageUrl, '_blank');
+  }
+});
+
+// ═══════════════════════════════════════════
+// RETRY
+// ═══════════════════════════════════════════
+retryBtn.addEventListener('click', () => {
+  if (!state.isGenerating) startGeneration();
+});
+
+// ═══════════════════════════════════════════
+// NEXT (clear all)
+// ═══════════════════════════════════════════
+nextBtn.addEventListener('click', () => {
+  clearPolling();
+  state.photos = [null, null, null];
+  state.selectedCostume = null;
+  state.generationId = null;
+  state.generatedImageUrl = null;
+  state.isGenerating = false;
+  renderPhotoSlots();
+  renderCostumes();
+  showPreviewState('placeholder');
+  setStatus('✨ בחר תחפושת והעלה תמונות');
+  setGenerating(false);
+  downloadBtn.disabled = true;
+  retryBtn.disabled = true;
+  hideError();
+  updateUI();
+});
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
+function showPreviewState(state) {
+  previewPlaceholder.style.display = state === 'placeholder' ? 'flex' : 'none';
+  previewLoading.style.display    = state === 'loading'     ? 'flex' : 'none';
+  previewResult.style.display     = state === 'result'      ? 'flex' : 'none';
+}
+
+function setGenerating(isGenerating) {
+  state.isGenerating = isGenerating;
+  if (isGenerating) {
+    generateBtnCnt.innerHTML = '<div class="spinner"></div> מייצר...';
+    generateBtn.disabled = true;
+  } else {
+    generateBtnCnt.textContent = '🎭 !צור תמונה';
+    updateUI();
+  }
+}
+
+function updateUI() {
+  const hasPhoto = getFirstUploadedPhotoUrl() !== null;
+  const hasCostume = !!state.selectedCostume;
+  const ready = hasPhoto && hasCostume && !state.isGenerating;
+  generateBtn.disabled = !ready;
+}
+
+function setStatus(msg) {
+  statusText.textContent = msg;
+}
+
+function getStatusMessage() {
+  const hasPhoto = state.photos.some(p => p?.uploadedUrl);
+  const hasCostume = !!state.selectedCostume;
+  if (hasPhoto && hasCostume) return '✨ מוכן ליצירה!';
+  if (hasPhoto) return '✨ בחר תחפושת';
+  if (hasCostume) return '✨ העלה תמונות';
+  return '✨ בחר תחפושת והעלה תמונות';
+}
+
+function getFirstUploadedPhotoUrl() {
+  for (const p of state.photos) {
+    if (p?.uploadedUrl) return p.uploadedUrl;
+  }
+  return null;
+}
+
+function showError(msg) {
+  errorBanner.textContent = msg;
+  errorBanner.style.display = 'block';
+}
+
+function hideError() {
+  errorBanner.style.display = 'none';
+  errorBanner.textContent = '';
+}
+
+function incrementCounter() {
+  state.imageCount++;
+  localStorage.setItem('purimImageCount', state.imageCount);
+  updateCounter();
+}
+
+function updateCounter() {
+  if (state.imageCount > 0) {
+    counterText.textContent = `🎨 נוצרו ${state.imageCount} תמונות`;
+  }
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function init() {
+  renderPhotoSlots();
+  renderTabs();
+  renderCostumes();
+  showPreviewState('placeholder');
+  updateCounter();
+  updateUI();
+}
+
+init();
+</script>
+</body>
+</html>

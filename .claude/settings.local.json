@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(curl:*)",
+      "Bash(open:*)",
+      "Bash(cp:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.krea.ai)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(lsof:*)"
+    ]
+  }
+}
