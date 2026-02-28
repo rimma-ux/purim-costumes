@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file, Response
 from dotenv import load_dotenv
 import krea_api
 from costume_parser import parse_costumes
@@ -78,17 +78,40 @@ def get_generation(generation_id):
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/result/<result_id>')
+def get_result_image(result_id):
+    """Serve a locally generated result image."""
+    path = krea_api.get_result_path(result_id)
+    if not path:
+        return jsonify({'error': 'Not found'}), 404
+    return send_file(path, mimetype='image/jpeg')
+
+
 @app.route('/api/download-image')
 def download_image():
-    """Proxy an image URL for download (avoids CORS issues)."""
+    """Proxy an image for download. Handles both local result URLs and external URLs."""
     import requests as req
     url = request.args.get('url')
     if not url:
         return jsonify({'error': 'No URL provided'}), 400
+
+    # Local result image
+    if url.startswith('/api/result/'):
+        result_id = url.split('/')[-1]
+        path = krea_api.get_result_path(result_id)
+        if not path:
+            return jsonify({'error': 'Not found'}), 404
+        return send_file(
+            path,
+            mimetype='image/jpeg',
+            as_attachment=True,
+            download_name='purim-costume.jpg',
+        )
+
+    # External URL fallback
     try:
         r = req.get(url, timeout=30)
         r.raise_for_status()
-        from flask import Response
         return Response(
             r.content,
             content_type='image/jpeg',

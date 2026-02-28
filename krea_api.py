@@ -1,89 +1,99 @@
 import os
+import base64
+import uuid
 import requests
+from PIL import Image
+import io
 
-BASE_URL = 'https://api.krea.ai'
+BASE_URL = 'https://generativelanguage.googleapis.com/v1beta'
+MODEL = 'gemini-3-pro-image-preview'
+
+UPLOADS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
 
-def _headers(json=False):
-    token = os.environ.get('KREA_API_TOKEN', '')
-    h = {'Authorization': f'Bearer {token}'}
-    if json:
-        h['Content-Type'] = 'application/json'
-    return h
+def _api_key():
+    return os.environ.get('GEMINI_API_KEY', '')
+
+
+def _ensure_uploads():
+    os.makedirs(UPLOADS_DIR, exist_ok=True)
+
+
+def _to_jpeg_b64(file_data):
+    """Convert any image bytes to base64-encoded JPEG."""
+    with Image.open(io.BytesIO(file_data)) as img:
+        out = io.BytesIO()
+        img.convert('RGB').save(out, format='JPEG', quality=90)
+        return base64.b64encode(out.getvalue()).decode('utf-8')
 
 
 def upload_asset(file_data, filename, content_type='image/jpeg'):
-    """Upload a file to Krea and return the asset image_url."""
-    files = {'file': (filename, file_data, content_type)}
-    resp = requests.post(f'{BASE_URL}/assets', headers=_headers(), files=files, timeout=60)
-    resp.raise_for_status()
-    data = resp.json()
+    """Save uploaded photo locally. Returns a photo_id (used in place of a CDN URL)."""
+    _ensure_uploads()
+    photo_id = str(uuid.uuid4())
+    path = os.path.join(UPLOADS_DIR, f'photo_{photo_id}.bin')
+    with open(path, 'wb') as f:
+        f.write(file_data)
+    return photo_id
 
-    # Docs say response has an image_url field
-    url = (
-        data.get('image_url')
-        or data.get('url')
-        or (data.get('data') or {}).get('image_url')
-        or (data.get('data') or {}).get('url')
+
+def generate_image(prompt, photo_id):
+    """Call Gemini to generate a costumed portrait. Returns a result_id.
+    Blocks until the image is returned (10–30 s typical).
+    """
+    _ensure_uploads()
+
+    photo_path = os.path.join(UPLOADS_DIR, f'photo_{photo_id}.bin')
+    with open(photo_path, 'rb') as f:
+        image_b64 = _to_jpeg_b64(f.read())
+
+    full_prompt = (
+        f'Generate a realistic portrait photo of this exact person wearing this costume: {prompt}. '
+        f'Preserve the person\'s face and features. '
+        f'Portrait orientation, 2:3 aspect ratio.'
     )
-    if not url:
-        raise ValueError(f"Could not find URL in upload response: {data}")
-    return url
 
-
-def generate_image(prompt, image_url):
-    """Trigger image generation. Returns job_id."""
     payload = {
-        'prompt': prompt,
-        'imageUrls': [image_url],   # array, not single string
-        'aspectRatio': '2:3',       # camelCase per docs
+        'contents': [{
+            'parts': [
+                {'inline_data': {'mime_type': 'image/jpeg', 'data': image_b64}},
+                {'text': full_prompt},
+            ]
+        }],
+        'generationConfig': {'responseModalities': ['IMAGE', 'TEXT']},
     }
-    resp = requests.post(
-        f'{BASE_URL}/generate/image/google/nano-banana-pro',
-        headers=_headers(json=True),
-        json=payload,
-        timeout=60,
-    )
+
+    url = f'{BASE_URL}/models/{MODEL}:generateContent?key={_api_key()}'
+    resp = requests.post(url, json=payload, timeout=120)
     resp.raise_for_status()
     data = resp.json()
 
-    job_id = (
-        data.get('job_id')
-        or data.get('id')
-        or (data.get('data') or {}).get('job_id')
-        or (data.get('data') or {}).get('id')
-    )
-    if not job_id:
-        raise ValueError(f"Could not find job ID in response: {data}")
-    return job_id
+    for candidate in data.get('candidates', []):
+        for part in candidate.get('content', {}).get('parts', []):
+            if 'inline_data' in part:
+                result_id = str(uuid.uuid4())
+                img_bytes = base64.b64decode(part['inline_data']['data'])
+                # Normalise to JPEG regardless of what Gemini returned
+                with Image.open(io.BytesIO(img_bytes)) as img:
+                    out = io.BytesIO()
+                    img.convert('RGB').save(out, format='JPEG', quality=95)
+                result_path = os.path.join(UPLOADS_DIR, f'result_{result_id}.jpg')
+                with open(result_path, 'wb') as f:
+                    f.write(out.getvalue())
+                return result_id
+
+    raise ValueError(f'No image in Gemini response: {data}')
 
 
-def poll_generation(job_id):
-    """Poll job status. Returns dict with status and optional image url."""
-    resp = requests.get(
-        f'{BASE_URL}/jobs/{job_id}',   # /jobs/{id} per docs
-        headers=_headers(),
-        timeout=30,
-    )
-    resp.raise_for_status()
-    data = resp.json()
+def poll_generation(result_id):
+    """Return status dict. Since Gemini is synchronous the result is always ready."""
+    path = os.path.join(UPLOADS_DIR, f'result_{result_id}.jpg')
+    if os.path.exists(path):
+        return {'status': 'completed', 'url': f'/api/result/{result_id}'}
+    return {'status': 'processing', 'url': None}
 
-    status = data.get('status') or (data.get('data') or {}).get('status')
 
-    # Extract result URL
-    result = data.get('result') or (data.get('data') or {}).get('result') or {}
-    image_url = None
-    if isinstance(result, dict):
-        urls = result.get('urls', [])
-        image_url = urls[0] if urls else result.get('url')
-    elif isinstance(result, list) and result:
-        image_url = result[0]
-
-    # Fallback: top-level url
-    if not image_url:
-        image_url = data.get('url') or (data.get('data') or {}).get('url')
-
-    return {
-        'status': status,
-        'url': image_url,
-    }
+def get_result_path(result_id):
+    """Return the filesystem path to the result image, or None."""
+    path = os.path.join(UPLOADS_DIR, f'result_{result_id}.jpg')
+    return path if os.path.exists(path) else None
