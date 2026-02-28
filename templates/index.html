@@ -984,22 +984,35 @@ downloadBtn.addEventListener('click', async () => {
   if (!state.generatedImageUrl) return;
   downloadBtn.disabled = true;
   try {
-    // Fetch through backend proxy to avoid CORS, then create a blob URL for download
     const proxyUrl = '/api/download-image?url=' + encodeURIComponent(state.generatedImageUrl);
     const resp = await fetch(proxyUrl);
     if (!resp.ok) throw new Error('Download failed');
     const blob = await resp.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = 'purim-costume.jpg';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    const file = new File([blob], 'purim-costume.jpg', { type: 'image/jpeg' });
+
+    const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+    if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+      // Mobile: Web Share API lets user save to photos or share to WhatsApp etc.
+      await navigator.share({ files: [file], title: 'תחפושת פורים' });
+    } else if (isMobile) {
+      // Mobile without share support: open in new tab so user can long-press to save
+      window.open(state.generatedImageUrl, '_blank');
+    } else {
+      // Desktop: standard blob download
+      const blobUrl = URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'purim-costume.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    }
   } catch (err) {
-    // Fallback: open in new tab
-    window.open(state.generatedImageUrl, '_blank');
+    if (err.name !== 'AbortError') {
+      // AbortError = user cancelled share sheet – not a real error
+      window.open(state.generatedImageUrl, '_blank');
+    }
   } finally {
     downloadBtn.disabled = false;
   }

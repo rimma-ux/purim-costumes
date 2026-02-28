@@ -91,7 +91,7 @@ def download_image():
         from flask import Response
         return Response(
             r.content,
-            content_type=r.headers.get('Content-Type', 'image/jpeg'),
+            content_type='image/jpeg',
             headers={'Content-Disposition': 'attachment; filename="purim-costume.jpg"'},
         )
     except Exception as e:
