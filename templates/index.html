@@ -535,7 +535,8 @@ body {
 
   /* ── Generate button: prominent, in normal flow ── */
   .btn-generate {
-    position: static;           /* override any fixed/absolute */
+    position: relative;         /* establish stacking context so button stays on top */
+    z-index: 10;
     width: 100%;
     min-height: 60px;
     font-size: 1.15rem;
@@ -894,8 +895,12 @@ function renderCostumes() {
 generateBtn.addEventListener('click', startGeneration);
 
 async function startGeneration() {
+  console.log('startGeneration called. photoUrl:', getFirstUploadedPhotoUrl(), 'costume:', state.selectedCostume?.hebrew_name, 'isGenerating:', state.isGenerating);
   const photoUrl = getFirstUploadedPhotoUrl();
-  if (!photoUrl || !state.selectedCostume) return;
+  if (!photoUrl || !state.selectedCostume) {
+    console.log('startGeneration blocked — missing photo or costume');
+    return;
+  }
 
   clearPolling();
   state.isGenerating = true;
@@ -1011,11 +1016,13 @@ downloadBtn.addEventListener('click', async () => {
         window.open(imageUrl, '_blank');
       }
     } else {
-      // Desktop: fetch via download proxy to trigger Save dialog
-      const proxyUrl = '/api/download-image?url=' + encodeURIComponent(state.generatedImageUrl);
-      const resp = await fetch(proxyUrl);
-      if (!resp.ok) throw new Error('Download failed: ' + resp.status);
+      // Desktop: fetch image directly (same-origin, no CORS needed) and trigger Save dialog
+      console.log('Desktop download: fetching', imageUrl);
+      const resp = await fetch(imageUrl);
+      console.log('Desktop fetch response:', resp.status, resp.ok);
+      if (!resp.ok) throw new Error('Fetch failed: ' + resp.status);
       const blob = await resp.blob();
+      console.log('Desktop blob size:', blob.size, 'type:', blob.type);
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
@@ -1024,6 +1031,7 @@ downloadBtn.addEventListener('click', async () => {
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      console.log('Desktop download triggered');
     }
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -1090,6 +1098,7 @@ function updateUI() {
   const hasCostume = !!state.selectedCostume;
   const ready = hasPhoto && hasCostume && !state.isGenerating;
   generateBtn.disabled = !ready;
+  console.log('updateUI — hasPhoto:', hasPhoto, 'hasCostume:', hasCostume, 'isGenerating:', state.isGenerating, '→ button disabled:', !ready);
 }
 
 function setStatus(msg) {
