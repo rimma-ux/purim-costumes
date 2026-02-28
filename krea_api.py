@@ -70,9 +70,10 @@ def generate_image(prompt, photo_id):
 
     for candidate in data.get('candidates', []):
         for part in candidate.get('content', {}).get('parts', []):
-            if 'inline_data' in part:
+            inline = part.get('inlineData') or part.get('inline_data')
+            if inline and inline.get('mimeType', inline.get('mime_type', '')).startswith('image/'):
                 result_id = str(uuid.uuid4())
-                img_bytes = base64.b64decode(part['inline_data']['data'])
+                img_bytes = base64.b64decode(inline['data'])
                 # Normalise to JPEG regardless of what Gemini returned
                 with Image.open(io.BytesIO(img_bytes)) as img:
                     out = io.BytesIO()
