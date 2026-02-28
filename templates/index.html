@@ -46,6 +46,9 @@ body {
   padding: 22px 24px 18px;
   text-align: center;
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  position: relative;
+  z-index: 10;
 }
 .site-header h1 {
   font-family: 'Varela Round', sans-serif;
@@ -522,24 +525,6 @@ body {
     align-items: stretch;
   }
 
-  /*
-   * Use display:contents to "dissolve" the sidebar and main containers.
-   * Their children become direct flex children of .layout, so we can
-   * control the exact stacking order with the `order` property.
-   */
-  .sidebar { display: contents; }
-  .main    { display: contents; }
-
-  /* ── Stacking order ── */
-  .upload-section       { order: 1; } /* photo upload    */
-  .main > :nth-child(1) { order: 2; } /* category tabs   */
-  .main > :nth-child(2) { order: 3; } /* costume grid    */
-  .btn-generate         { order: 4; } /* generate button */
-  .status-text          { order: 5; } /* status message  */
-  .preview-panel        { order: 6; } /* preview (last!) */
-  .action-buttons       { order: 7; } /* הורד / נסה שוב / הבא */
-  .counter-text         { order: 8; } /* image counter   */
-
   /* ── Photo upload ── */
   .upload-section h3 { font-size: 1rem; margin-bottom: 12px; }
   .photo-slots { justify-content: center; gap: 12px; }
@@ -774,9 +759,12 @@ function renderPhotoSlots() {
     slot.dataset.index = i;
 
     if (photo) {
+      const thumbHtml = photo.dataUrl
+        ? `<img class="thumb" src="${photo.dataUrl}" alt="תמונה ${i+1}" />`
+        : `<span class="slot-icon">✅</span>`;
       slot.innerHTML = `
         <div class="slot-inner has-photo">
-          <img class="thumb" src="${photo.dataUrl}" alt="תמונה ${i+1}" />
+          ${thumbHtml}
         </div>
         <button class="slot-remove" title="הסר תמונה">✕</button>
       `;
@@ -820,11 +808,13 @@ function triggerFileInput(index) {
 }
 
 async function handlePhotoSelect(index, file) {
-  // Show thumbnail immediately via FileReader
-  const dataUrl = await readFileAsDataURL(file);
+  setStatus('⏳ מעלה תמונה...');
+
+  // Try to show thumbnail preview (may fail for HEIC on iOS – that's OK)
+  let dataUrl = null;
+  try { dataUrl = await readFileAsDataURL(file); } catch (e) { /* no preview available */ }
   state.photos[index] = { dataUrl, uploadedUrl: null };
   renderPhotoSlots();
-  setStatus('⏳ מעלה תמונה...');
   updateUI();
 
   try {
@@ -846,9 +836,10 @@ async function handlePhotoSelect(index, file) {
 }
 
 function readFileAsDataURL(file) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => reject(new Error('Cannot read file'));
     reader.readAsDataURL(file);
   });
 }
@@ -939,11 +930,12 @@ async function startGeneration() {
   }
 }
 
-function pollGeneration() {
+function pollGeneration(retryCount = 0) {
   if (!state.generationId) return;
+  const delay = retryCount > 0 ? 3000 : 2000;
   state.pollingTimer = setTimeout(async () => {
     try {
-      const resp = await fetch(`/api/generation/${state.generationId}`);
+      const resp = await fetch('/api/generation/' + encodeURIComponent(state.generationId));
       const data = await resp.json();
       if (!resp.ok || data.error) throw new Error(data.error || 'Poll failed');
 
@@ -960,17 +952,22 @@ function pollGeneration() {
       } else if (data.status === 'failed' || data.status === 'error') {
         throw new Error('Generation failed on server');
       } else {
-        // Still processing
-        pollGeneration();
+        // Still processing — continue polling
+        pollGeneration(0);
       }
     } catch (err) {
       console.error('Poll error:', err);
-      showError('❌ שגיאה בטעינה: ' + err.message);
-      showPreviewState('placeholder');
-      setStatus('❌ שגיאה - נסה שוב');
-      setGenerating(false);
+      if (retryCount < 3) {
+        // Retry up to 3 times on transient network errors
+        pollGeneration(retryCount + 1);
+      } else {
+        showError('❌ שגיאה ביצירה - נסה שוב');
+        showPreviewState('placeholder');
+        setStatus('❌ שגיאה - נסה שוב');
+        setGenerating(false);
+      }
     }
-  }, 2000);
+  }, delay);
 }
 
 function clearPolling() {
@@ -985,18 +982,26 @@ function clearPolling() {
 // ═══════════════════════════════════════════
 downloadBtn.addEventListener('click', async () => {
   if (!state.generatedImageUrl) return;
+  downloadBtn.disabled = true;
   try {
-    // Use backend proxy to avoid CORS download issues
+    // Fetch through backend proxy to avoid CORS, then create a blob URL for download
     const proxyUrl = '/api/download-image?url=' + encodeURIComponent(state.generatedImageUrl);
+    const resp = await fetch(proxyUrl);
+    if (!resp.ok) throw new Error('Download failed');
+    const blob = await resp.blob();
+    const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = proxyUrl;
+    a.href = blobUrl;
     a.download = 'purim-costume.jpg';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
   } catch (err) {
     // Fallback: open in new tab
     window.open(state.generatedImageUrl, '_blank');
+  } finally {
+    downloadBtn.disabled = false;
   }
 });
 
@@ -1098,9 +1103,40 @@ function updateCounter() {
 }
 
 // ═══════════════════════════════════════════
+// MOBILE LAYOUT (DOM reorder – more reliable than display:contents on iOS)
+// ═══════════════════════════════════════════
+function applyMobileLayout() {
+  if (window.innerWidth > 768) return;
+  const layout  = document.querySelector('.layout');
+  const sidebar = document.querySelector('.sidebar');
+  const main    = document.querySelector('.main');
+  if (!layout || !sidebar || !main) return;
+
+  // Elements in desired mobile stacking order
+  const mobileOrder = [
+    document.querySelector('.upload-section'),              // 1 upload
+    document.querySelector('#categoryTabs').closest('.panel'), // 2 tabs
+    document.querySelector('#costumeGrid').closest('.panel'),  // 3 grid
+    document.querySelector('#generateBtn'),                 // 4 generate
+    document.querySelector('#statusText'),                  // 5 status
+    document.querySelector('#previewPanel'),                // 6 preview
+    document.querySelector('#actionButtons'),               // 7 buttons
+    document.querySelector('#counterText'),                 // 8 counter
+  ];
+
+  // Append directly to layout in desired order
+  mobileOrder.forEach(el => { if (el) layout.appendChild(el); });
+
+  // Hide now-empty wrappers
+  sidebar.style.display = 'none';
+  main.style.display    = 'none';
+}
+
+// ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
 function init() {
+  applyMobileLayout(); // reorder DOM on mobile before rendering content
   renderPhotoSlots();
   renderTabs();
   renderCostumes();
